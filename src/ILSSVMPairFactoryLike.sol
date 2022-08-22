@@ -5,9 +5,7 @@ import {LSSVMRouter} from "./LSSVMRouter.sol";
 
 interface ILSSVMPairFactoryLike {
     enum PairVariant {
-        ENUMERABLE_ETH,
         MISSING_ENUMERABLE_ETH,
-        ENUMERABLE_ERC20,
         MISSING_ENUMERABLE_ERC20
     }
 

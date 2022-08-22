@@ -12,9 +12,7 @@ import {LSSVMPairFactory} from "../../LSSVMPairFactory.sol";
 import {LSSVMPair} from "../../LSSVMPair.sol";
 import {LSSVMPairETH} from "../../LSSVMPairETH.sol";
 import {LSSVMPairERC20} from "../../LSSVMPairERC20.sol";
-import {LSSVMPairEnumerableETH} from "../../LSSVMPairEnumerableETH.sol";
 import {LSSVMPairMissingEnumerableETH} from "../../LSSVMPairMissingEnumerableETH.sol";
-import {LSSVMPairEnumerableERC20} from "../../LSSVMPairEnumerableERC20.sol";
 import {LSSVMPairMissingEnumerableERC20} from "../../LSSVMPairMissingEnumerableERC20.sol";
 import {Configurable} from "../mixins/Configurable.sol";
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
@@ -24,7 +22,12 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {Test1155} from "../../mocks/Test1155.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
-abstract contract PairAndFactory is DSTest, ERC721Holder, Configurable, ERC1155Holder {
+abstract contract PairAndFactory is
+    DSTest,
+    ERC721Holder,
+    Configurable,
+    ERC1155Holder
+{
     uint128 delta = 1.1 ether;
     uint128 spotPrice = 1 ether;
     uint256 tokenAmount = 10 ether;
@@ -43,14 +46,10 @@ abstract contract PairAndFactory is DSTest, ERC721Holder, Configurable, ERC1155H
     function setUp() public {
         bondingCurve = setupCurve();
         test721 = setup721();
-        LSSVMPairEnumerableETH enumerableETHTemplate = new LSSVMPairEnumerableETH();
         LSSVMPairMissingEnumerableETH missingEnumerableETHTemplate = new LSSVMPairMissingEnumerableETH();
-        LSSVMPairEnumerableERC20 enumerableERC20Template = new LSSVMPairEnumerableERC20();
         LSSVMPairMissingEnumerableERC20 missingEnumerableERC20Template = new LSSVMPairMissingEnumerableERC20();
         factory = new LSSVMPairFactory(
-            enumerableETHTemplate,
             missingEnumerableETHTemplate,
-            enumerableERC20Template,
             missingEnumerableERC20Template,
             feeRecipient,
             protocolFeeMultiplier

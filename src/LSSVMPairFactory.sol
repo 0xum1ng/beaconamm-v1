@@ -5,7 +5,6 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 
 // @dev Solmate's ERC20 is used instead of OZ's ERC20 so we can use safeTransferLib for cheaper safeTransfers for
 // ETH and ERC20 tokens
@@ -19,8 +18,6 @@ import {ICurve} from "./bonding-curves/ICurve.sol";
 import {LSSVMPairERC20} from "./LSSVMPairERC20.sol";
 import {LSSVMPairCloner} from "./lib/LSSVMPairCloner.sol";
 import {ILSSVMPairFactoryLike} from "./ILSSVMPairFactoryLike.sol";
-import {LSSVMPairEnumerableETH} from "./LSSVMPairEnumerableETH.sol";
-import {LSSVMPairEnumerableERC20} from "./LSSVMPairEnumerableERC20.sol";
 import {LSSVMPairMissingEnumerableETH} from "./LSSVMPairMissingEnumerableETH.sol";
 import {LSSVMPairMissingEnumerableERC20} from "./LSSVMPairMissingEnumerableERC20.sol";
 
@@ -29,14 +26,9 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
     using SafeTransferLib for address payable;
     using SafeTransferLib for ERC20;
 
-    bytes4 private constant INTERFACE_ID_ERC721_ENUMERABLE =
-        type(IERC721Enumerable).interfaceId;
-
     uint256 internal constant MAX_PROTOCOL_FEE = 0.10e18; // 10%, must <= 1 - MAX_FEE
 
-    LSSVMPairEnumerableETH public immutable enumerableETHTemplate;
     LSSVMPairMissingEnumerableETH public immutable missingEnumerableETHTemplate;
-    LSSVMPairEnumerableERC20 public immutable enumerableERC20Template;
     LSSVMPairMissingEnumerableERC20
         public immutable missingEnumerableERC20Template;
     address payable public override protocolFeeRecipient;
@@ -62,16 +54,12 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
     event RouterStatusUpdate(LSSVMRouter router, bool isAllowed);
 
     constructor(
-        LSSVMPairEnumerableETH _enumerableETHTemplate,
         LSSVMPairMissingEnumerableETH _missingEnumerableETHTemplate,
-        LSSVMPairEnumerableERC20 _enumerableERC20Template,
         LSSVMPairMissingEnumerableERC20 _missingEnumerableERC20Template,
         address payable _protocolFeeRecipient,
         uint256 _protocolFeeMultiplier
     ) {
-        enumerableETHTemplate = _enumerableETHTemplate;
         missingEnumerableETHTemplate = _missingEnumerableETHTemplate;
-        enumerableERC20Template = _enumerableERC20Template;
         missingEnumerableERC20Template = _missingEnumerableERC20Template;
         protocolFeeRecipient = _protocolFeeRecipient;
 
@@ -89,7 +77,7 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
         @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
         @param _assetRecipient The address that will receive the assets traders give during trades.
                               If set to address(0), assets will be sent to the pool address.
-                              Not available to TRADE pools. 
+                              Not available to TRADE pools.
         @param _poolType TOKEN, NFT, or TRADE
         @param _delta The delta value used by the bonding curve. The meaning of delta depends
         on the specific curve.
@@ -112,15 +100,8 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
             bondingCurveAllowed[_bondingCurve],
             "Bonding curve not whitelisted"
         );
-        
-        // Check to see if the NFT supports Enumerable to determine which template to use
-        address template;
-        try IERC165(address(_nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
-          template = isEnumerable ? address(enumerableETHTemplate)
-            : address(missingEnumerableETHTemplate);
-        } catch {
-          template = address(missingEnumerableETHTemplate);
-        }
+
+        address template = address(missingEnumerableETHTemplate);
 
         pair = LSSVMPairETH(
             payable(
@@ -183,14 +164,7 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
             "Bonding curve not whitelisted"
         );
 
-        // Check to see if the NFT supports Enumerable to determine which template to use
-        address template;
-        try IERC165(address(params.nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
-          template = isEnumerable ? address(enumerableERC20Template)
-            : address(missingEnumerableERC20Template);
-        } catch {
-          template = address(missingEnumerableERC20Template);
-        }
+        address template = address(missingEnumerableERC20Template);
 
         pair = LSSVMPairERC20(
             payable(
@@ -221,7 +195,7 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
     /**
         @notice Checks if an address is a LSSVMPair. Uses the fact that the pairs are EIP-1167 minimal proxies.
         @param potentialPair The address to check
-        @param variant The pair variant (NFT is enumerable or not, pair uses ETH or ERC20)
+        @param variant The pair variant
         @return True if the address is the specified pair variant, false otherwise
      */
     function isPair(address potentialPair, PairVariant variant)
@@ -230,25 +204,11 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
         override
         returns (bool)
     {
-        if (variant == PairVariant.ENUMERABLE_ERC20) {
-            return
-                LSSVMPairCloner.isERC20PairClone(
-                    address(this),
-                    address(enumerableERC20Template),
-                    potentialPair
-                );
-        } else if (variant == PairVariant.MISSING_ENUMERABLE_ERC20) {
+        if (variant == PairVariant.MISSING_ENUMERABLE_ERC20) {
             return
                 LSSVMPairCloner.isERC20PairClone(
                     address(this),
                     address(missingEnumerableERC20Template),
-                    potentialPair
-                );
-        } else if (variant == PairVariant.ENUMERABLE_ETH) {
-            return
-                LSSVMPairCloner.isETHPairClone(
-                    address(this),
-                    address(enumerableETHTemplate),
                     potentialPair
                 );
         } else if (variant == PairVariant.MISSING_ENUMERABLE_ETH) {
@@ -445,7 +405,7 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
         }
     }
 
-    /** 
+    /**
       @dev Used to deposit NFTs into a pair after creation and emit an event for indexing (if recipient is indeed a pair)
     */
     function depositNFTs(
@@ -463,8 +423,6 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
             }
         }
         if (
-            isPair(recipient, PairVariant.ENUMERABLE_ERC20) ||
-            isPair(recipient, PairVariant.ENUMERABLE_ETH) ||
             isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20) ||
             isPair(recipient, PairVariant.MISSING_ENUMERABLE_ETH)
         ) {
@@ -481,10 +439,7 @@ contract LSSVMPairFactory is Ownable, ILSSVMPairFactoryLike {
         uint256 amount
     ) external {
         token.safeTransferFrom(msg.sender, recipient, amount);
-        if (
-            isPair(recipient, PairVariant.ENUMERABLE_ERC20) ||
-            isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)
-        ) {
+        if (isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)) {
             if (token == LSSVMPairERC20(recipient).token()) {
                 emit TokenDeposit(recipient);
             }

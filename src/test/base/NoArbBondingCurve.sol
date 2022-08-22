@@ -7,9 +7,7 @@ import {Configurable} from "../mixins/Configurable.sol";
 import {LSSVMPair} from "../../LSSVMPair.sol";
 import {LSSVMPairETH} from "../../LSSVMPairETH.sol";
 import {LSSVMPairERC20} from "../../LSSVMPairERC20.sol";
-import {LSSVMPairEnumerableETH} from "../../LSSVMPairEnumerableETH.sol";
 import {LSSVMPairMissingEnumerableETH} from "../../LSSVMPairMissingEnumerableETH.sol";
-import {LSSVMPairEnumerableERC20} from "../../LSSVMPairEnumerableERC20.sol";
 import {LSSVMPairMissingEnumerableERC20} from "../../LSSVMPairMissingEnumerableERC20.sol";
 import {LSSVMPairFactory} from "../../LSSVMPairFactory.sol";
 import {ICurve} from "../../bonding-curves/ICurve.sol";
@@ -30,14 +28,10 @@ abstract contract NoArbBondingCurve is DSTest, ERC721Holder, Configurable {
     function setUp() public {
         bondingCurve = setupCurve();
         test721 = setup721();
-        LSSVMPairEnumerableETH enumerableETHTemplate = new LSSVMPairEnumerableETH();
         LSSVMPairMissingEnumerableETH missingEnumerableETHTemplate = new LSSVMPairMissingEnumerableETH();
-        LSSVMPairEnumerableERC20 enumerableERC20Template = new LSSVMPairEnumerableERC20();
         LSSVMPairMissingEnumerableERC20 missingEnumerableERC20Template = new LSSVMPairMissingEnumerableERC20();
         factory = new LSSVMPairFactory(
-            enumerableETHTemplate,
             missingEnumerableETHTemplate,
-            enumerableERC20Template,
             missingEnumerableERC20Template,
             feeRecipient,
             protocolFeeMultiplier

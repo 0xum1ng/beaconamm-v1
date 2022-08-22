@@ -48,7 +48,7 @@ contract LSSVMRouter {
     }
 
     struct RobustPairNFTsFoTokenAndTokenforNFTsTrade {
-        RobustPairSwapSpecific[] tokenToNFTTrades;  
+        RobustPairSwapSpecific[] tokenToNFTTrades;
         RobustPairSwapSpecificForToken[] nftToTokenTrades;
         uint256 inputAmount;
         address payable tokenRecipient;
@@ -475,7 +475,7 @@ contract LSSVMRouter {
         @param nftRecipient The address that will receive the NFT output
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return remainingValue The unspent token amount
-        
+
      */
     function robustSwapERC20ForAnyNFTs(
         RobustPairSwapAny[] calldata swapList,
@@ -744,17 +744,21 @@ contract LSSVMRouter {
             uint256 numSwaps = params.tokenToNFTTrades.length;
             for (uint256 i; i < numSwaps; ) {
                 // Calculate actual cost per swap
-                (error, , , pairCost, ) = params.tokenToNFTTrades[i]
+                (error, , , pairCost, ) = params
+                    .tokenToNFTTrades[i]
                     .swapInfo
                     .pair
-                    .getBuyNFTQuote(params.tokenToNFTTrades[i].swapInfo.nftIds.length);
+                    .getBuyNFTQuote(
+                        params.tokenToNFTTrades[i].swapInfo.nftIds.length
+                    );
 
                 // If within our maxCost and no error, proceed
                 if (
                     pairCost <= params.tokenToNFTTrades[i].maxCost &&
                     error == CurveErrorCodes.Error.OK
                 ) {
-                    remainingValue -= params.tokenToNFTTrades[i]
+                    remainingValue -= params
+                        .tokenToNFTTrades[i]
                         .swapInfo
                         .pair
                         .swapTokenForSpecificNFTs(
@@ -845,8 +849,7 @@ contract LSSVMRouter {
 
         // verify caller is an ERC20 pair
         require(
-            variant == ILSSVMPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
-                variant ==
+            variant ==
                 ILSSVMPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20,
             "Not ERC20 pair"
         );
@@ -998,7 +1001,7 @@ contract LSSVMRouter {
     /**
         @notice Internal function used to swap an ERC20 token for any NFTs
         @dev Note that we don't need to query the pair's bonding curve first for pricing data because
-        we just calculate and take the required amount from the caller during swap time. 
+        we just calculate and take the required amount from the caller during swap time.
         However, we can't "pull" ETH, which is why for the ETH->NFT swaps, we need to calculate the pricing info
         to figure out how much the router should send to the pool.
         @param swapList The list of pairs and swap calldata
@@ -1036,7 +1039,7 @@ contract LSSVMRouter {
     /**
         @notice Internal function used to swap an ERC20 token for specific NFTs
         @dev Note that we don't need to query the pair's bonding curve first for pricing data because
-        we just calculate and take the required amount from the caller during swap time. 
+        we just calculate and take the required amount from the caller during swap time.
         However, we can't "pull" ETH, which is why for the ETH->NFT swaps, we need to calculate the pricing info
         to figure out how much the router should send to the pool.
         @param swapList The list of pairs and swap calldata
@@ -1073,10 +1076,10 @@ contract LSSVMRouter {
 
     /**
         @notice Swaps NFTs for tokens, designed to be used for 1 token at a time
-        @dev Calling with multiple tokens is permitted, BUT minOutput will be 
+        @dev Calling with multiple tokens is permitted, BUT minOutput will be
         far from enough of a safety check because different tokens almost certainly have different unit prices.
-        @param swapList The list of pairs and swap calldata 
-        @param minOutput The minimum number of tokens to be receieved frm the swaps 
+        @param swapList The list of pairs and swap calldata
+        @param minOutput The minimum number of tokens to be receieved frm the swaps
         @param tokenRecipient The address that receives the tokens
         @return outputAmount The number of tokens to be received
      */

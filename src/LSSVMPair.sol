@@ -65,13 +65,13 @@ abstract contract LSSVMPair is
     /**
       @notice Called during pair creation to set initial parameters
       @dev Only called once by factory to initialize.
-      We verify this by making sure that the current owner is address(0). 
+      We verify this by making sure that the current owner is address(0).
       The Ownable library we use disallows setting the owner to be address(0), so this condition
-      should only be valid before the first initialize call. 
+      should only be valid before the first initialize call.
       @param _owner The owner of the pair
       @param _assetRecipient The address that will receive the TOKEN or NFT sent to this pair during swaps. NOTE: If set to address(0), they will go to the pair itself.
       @param _delta The initial delta of the bonding curve
-      @param _fee The initial % fee taken, if this is a trade pair 
+      @param _fee The initial % fee taken, if this is a trade pair
       @param _spotPrice The initial price to sell an asset into the pair
      */
     function initialize(
@@ -357,7 +357,7 @@ abstract contract LSSVMPair is
     function getAllHeldIds() external view virtual returns (uint256[] memory);
 
     /**
-        @notice Returns the pair's variant (NFT is enumerable or not, pair uses ETH or ERC20)
+        @notice Returns the pair's variant
      */
     function pairVariant()
         public
@@ -583,7 +583,7 @@ abstract contract LSSVMPair is
 
     /**
         @notice Sends excess tokens back to the caller (if applicable)
-        @dev We send ETH back to the caller even when called from LSSVMRouter because we do an aggregate slippage check for certain bulk swaps. (Instead of sending directly back to the router caller) 
+        @dev We send ETH back to the caller even when called from LSSVMRouter because we do an aggregate slippage check for certain bulk swaps. (Instead of sending directly back to the router caller)
         Excess ETH sent for one swap can then be used to help pay for the next swap.
      */
     function _refundTokenToSender(uint256 inputAmount) internal virtual;
@@ -608,11 +608,11 @@ abstract contract LSSVMPair is
 
     /**
         @notice Sends some number of NFTs to a recipient address, ID agnostic
-        @dev Even though we specify the NFT address here, this internal function is only 
+        @dev Even though we specify the NFT address here, this internal function is only
         used to send NFTs associated with this specific pool.
         @param _nft The address of the NFT to send
         @param nftRecipient The receiving address for the NFTs
-        @param numNFTs The number of NFTs to send  
+        @param numNFTs The number of NFTs to send
      */
     function _sendAnyNFTsToRecipient(
         IERC721 _nft,
@@ -622,11 +622,11 @@ abstract contract LSSVMPair is
 
     /**
         @notice Sends specific NFTs to a recipient address
-        @dev Even though we specify the NFT address here, this internal function is only 
+        @dev Even though we specify the NFT address here, this internal function is only
         used to send NFTs associated with this specific pool.
         @param _nft The address of the NFT to send
         @param nftRecipient The receiving address for the NFTs
-        @param nftIds The specific IDs of NFTs to send  
+        @param nftIds The specific IDs of NFTs to send
      */
     function _sendSpecificNFTsToRecipient(
         IERC721 _nft,
@@ -636,7 +636,7 @@ abstract contract LSSVMPair is
 
     /**
         @notice Takes NFTs from the caller and sends them into the pair's asset recipient
-        @dev This is used by the LSSVMPair's swapNFTForToken function. 
+        @dev This is used by the LSSVMPair's swapNFTForToken function.
         @param _nft The NFT collection to take from
         @param nftIds The specific NFT IDs to take
         @param isRouter True if calling from LSSVMRouter, false otherwise. Not used for
@@ -724,7 +724,7 @@ abstract contract LSSVMPair is
 
     /**
         @notice Rescues a specified set of NFTs owned by the pair to the owner address. (onlyOwnable modifier is in the implemented function)
-        @dev If the NFT is the pair's collection, we also remove it from the id tracking (if the NFT is missing enumerable).
+        @dev If the NFT is the pair's collection, we also remove it from the id tracking.
         @param a The NFT to transfer
         @param nftIds The list of IDs of the NFTs to send to the owner
      */
@@ -835,7 +835,7 @@ abstract contract LSSVMPair is
     }
 
     /**
-        @notice Allows owner to batch multiple calls, forked from: https://github.com/boringcrypto/BoringSolidity/blob/master/contracts/BoringBatchable.sol 
+        @notice Allows owner to batch multiple calls, forked from: https://github.com/boringcrypto/BoringSolidity/blob/master/contracts/BoringBatchable.sol
         @dev Intended for withdrawing/altering pool pricing in one tx, only callable by owner, cannot change owner
         @param calls The calldata for each call to make
         @param revertOnFail Whether or not to revert the entire tx if any of the calls fail
