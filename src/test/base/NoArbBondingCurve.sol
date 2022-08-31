@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 import {DSTest} from "ds-test/test.sol";
 import {Configurable} from "../mixins/Configurable.sol";
 
-import {LSSVMPair} from "../../LSSVMPair.sol";
-import {LSSVMPairETH} from "../../LSSVMPairETH.sol";
-import {LSSVMPairERC20} from "../../LSSVMPairERC20.sol";
-import {LSSVMPairMissingEnumerableETH} from "../../LSSVMPairMissingEnumerableETH.sol";
-import {LSSVMPairMissingEnumerableERC20} from "../../LSSVMPairMissingEnumerableERC20.sol";
-import {LSSVMPairFactory} from "../../LSSVMPairFactory.sol";
+import {BeaconAmmV1Pair} from "../../BeaconAmmV1Pair.sol";
+import {BeaconAmmV1PairETH} from "../../BeaconAmmV1PairETH.sol";
+import {BeaconAmmV1PairERC20} from "../../BeaconAmmV1PairERC20.sol";
+import {BeaconAmmV1PairMissingEnumerableETH} from "../../BeaconAmmV1PairMissingEnumerableETH.sol";
+import {BeaconAmmV1PairMissingEnumerableERC20} from "../../BeaconAmmV1PairMissingEnumerableERC20.sol";
+import {BeaconAmmV1Factory} from "../../BeaconAmmV1Factory.sol";
 import {ICurve} from "../../bonding-curves/ICurve.sol";
 import {CurveErrorCodes} from "../../bonding-curves/CurveErrorCodes.sol";
 import {Test721} from "../../mocks/Test721.sol";
@@ -21,16 +21,16 @@ abstract contract NoArbBondingCurve is DSTest, ERC721Holder, Configurable {
     uint256 startingId;
     IERC721Mintable test721;
     ICurve bondingCurve;
-    LSSVMPairFactory factory;
+    BeaconAmmV1Factory factory;
     address payable constant feeRecipient = payable(address(69));
     uint256 constant protocolFeeMultiplier = 3e15;
 
     function setUp() public {
         bondingCurve = setupCurve();
         test721 = setup721();
-        LSSVMPairMissingEnumerableETH missingEnumerableETHTemplate = new LSSVMPairMissingEnumerableETH();
-        LSSVMPairMissingEnumerableERC20 missingEnumerableERC20Template = new LSSVMPairMissingEnumerableERC20();
-        factory = new LSSVMPairFactory(
+        BeaconAmmV1PairMissingEnumerableETH missingEnumerableETHTemplate = new BeaconAmmV1PairMissingEnumerableETH();
+        BeaconAmmV1PairMissingEnumerableERC20 missingEnumerableERC20Template = new BeaconAmmV1PairMissingEnumerableERC20();
+        factory = new BeaconAmmV1Factory(
             missingEnumerableETHTemplate,
             missingEnumerableERC20Template,
             feeRecipient,
@@ -65,12 +65,12 @@ abstract contract NoArbBondingCurve is DSTest, ERC721Holder, Configurable {
 
         // initialize the pair
         uint256[] memory empty;
-        LSSVMPair pair = setupPair(
+        BeaconAmmV1Pair pair = setupPair(
             factory,
             test721,
             bondingCurve,
             payable(address(0)),
-            LSSVMPair.PoolType.TRADE,
+            BeaconAmmV1Pair.PoolType.TRADE,
             delta,
             0,
             spotPrice,
@@ -176,12 +176,12 @@ abstract contract NoArbBondingCurve is DSTest, ERC721Holder, Configurable {
             idList.push(startingId);
             startingId += 1;
         }
-        LSSVMPair pair = setupPair(
+        BeaconAmmV1Pair pair = setupPair(
             factory,
             test721,
             bondingCurve,
             payable(address(0)),
-            LSSVMPair.PoolType.TRADE,
+            BeaconAmmV1Pair.PoolType.TRADE,
             delta,
             0,
             spotPrice,

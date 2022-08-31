@@ -6,13 +6,13 @@ import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Hol
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {ICurve} from "../../bonding-curves/ICurve.sol";
-import {LSSVMPairFactory} from "../../LSSVMPairFactory.sol";
-import {LSSVMPair} from "../../LSSVMPair.sol";
-import {LSSVMPairETH} from "../../LSSVMPairETH.sol";
-import {LSSVMPairERC20} from "../../LSSVMPairERC20.sol";
-import {LSSVMPairMissingEnumerableETH} from "../../LSSVMPairMissingEnumerableETH.sol";
-import {LSSVMPairMissingEnumerableERC20} from "../../LSSVMPairMissingEnumerableERC20.sol";
-import {LSSVMRouter} from "../../LSSVMRouter.sol";
+import {BeaconAmmV1Factory} from "../../BeaconAmmV1Factory.sol";
+import {BeaconAmmV1Pair} from "../../BeaconAmmV1Pair.sol";
+import {BeaconAmmV1PairETH} from "../../BeaconAmmV1PairETH.sol";
+import {BeaconAmmV1PairERC20} from "../../BeaconAmmV1PairERC20.sol";
+import {BeaconAmmV1PairMissingEnumerableETH} from "../../BeaconAmmV1PairMissingEnumerableETH.sol";
+import {BeaconAmmV1PairMissingEnumerableERC20} from "../../BeaconAmmV1PairMissingEnumerableERC20.sol";
+import {BeaconAmmV1Router} from "../../BeaconAmmV1Router.sol";
 import {IERC721Mintable} from "../interfaces/IERC721Mintable.sol";
 import {Configurable} from "../mixins/Configurable.sol";
 import {RouterCaller} from "../mixins/RouterCaller.sol";
@@ -26,9 +26,9 @@ abstract contract RouterMultiPool is
 {
     IERC721Mintable test721;
     ICurve bondingCurve;
-    LSSVMPairFactory factory;
-    LSSVMRouter router;
-    mapping(uint256 => LSSVMPair) pairs;
+    BeaconAmmV1Factory factory;
+    BeaconAmmV1Router router;
+    mapping(uint256 => BeaconAmmV1Pair) pairs;
     address payable constant feeRecipient = payable(address(69));
     uint256 constant protocolFeeMultiplier = 3e15;
     uint256 numInitialNFTs = 10;
@@ -36,15 +36,15 @@ abstract contract RouterMultiPool is
     function setUp() public {
         bondingCurve = setupCurve();
         test721 = setup721();
-        LSSVMPairMissingEnumerableETH missingEnumerableETHTemplate = new LSSVMPairMissingEnumerableETH();
-        LSSVMPairMissingEnumerableERC20 missingEnumerableERC20Template = new LSSVMPairMissingEnumerableERC20();
-        factory = new LSSVMPairFactory(
+        BeaconAmmV1PairMissingEnumerableETH missingEnumerableETHTemplate = new BeaconAmmV1PairMissingEnumerableETH();
+        BeaconAmmV1PairMissingEnumerableERC20 missingEnumerableERC20Template = new BeaconAmmV1PairMissingEnumerableERC20();
+        factory = new BeaconAmmV1Factory(
             missingEnumerableETHTemplate,
             missingEnumerableERC20Template,
             feeRecipient,
             protocolFeeMultiplier
         );
-        router = new LSSVMRouter(factory);
+        router = new BeaconAmmV1Router(factory);
         factory.setBondingCurveAllowed(bondingCurve, true);
         factory.setRouterAllowed(router, true);
 
@@ -71,7 +71,7 @@ abstract contract RouterMultiPool is
                 test721,
                 bondingCurve,
                 payable(address(0)),
-                LSSVMPair.PoolType.TRADE,
+                BeaconAmmV1Pair.PoolType.TRADE,
                 modifyDelta(0),
                 0,
                 uint128(i * 1 ether),
@@ -84,14 +84,14 @@ abstract contract RouterMultiPool is
 
     function test_swapTokenForAny5NFTs() public {
         // Swap across all 5 pools
-        LSSVMRouter.PairSwapAny[]
-            memory swapList = new LSSVMRouter.PairSwapAny[](5);
+        BeaconAmmV1Router.PairSwapAny[]
+            memory swapList = new BeaconAmmV1Router.PairSwapAny[](5);
         uint256 totalInputAmount = 0;
         for (uint256 i = 0; i < 5; i++) {
             uint256 inputAmount;
             (, , , inputAmount, ) = pairs[i + 1].getBuyNFTQuote(1);
             totalInputAmount += inputAmount;
-            swapList[i] = LSSVMRouter.PairSwapAny({
+            swapList[i] = BeaconAmmV1Router.PairSwapAny({
                 pair: pairs[i + 1],
                 numItems: 1
             });
@@ -111,8 +111,8 @@ abstract contract RouterMultiPool is
 
     function test_swapTokenForSpecific5NFTs() public {
         // Swap across all 5 pools
-        LSSVMRouter.PairSwapSpecific[]
-            memory swapList = new LSSVMRouter.PairSwapSpecific[](5);
+        BeaconAmmV1Router.PairSwapSpecific[]
+            memory swapList = new BeaconAmmV1Router.PairSwapSpecific[](5);
         uint256 totalInputAmount = 0;
         for (uint256 i = 0; i < 5; i++) {
             uint256 inputAmount;
@@ -120,7 +120,7 @@ abstract contract RouterMultiPool is
             totalInputAmount += inputAmount;
             uint256[] memory nftIds = new uint256[](1);
             nftIds[0] = i + 1;
-            swapList[i] = LSSVMRouter.PairSwapSpecific({
+            swapList[i] = BeaconAmmV1Router.PairSwapSpecific({
                 pair: pairs[i + 1],
                 nftIds: nftIds
             });
@@ -142,8 +142,8 @@ abstract contract RouterMultiPool is
 
     function test_swap5NFTsForToken() public {
         // Swap across all 5 pools
-        LSSVMRouter.PairSwapSpecific[]
-            memory swapList = new LSSVMRouter.PairSwapSpecific[](5);
+        BeaconAmmV1Router.PairSwapSpecific[]
+            memory swapList = new BeaconAmmV1Router.PairSwapSpecific[](5);
         uint256 totalOutputAmount = 0;
         for (uint256 i = 0; i < 5; i++) {
             uint256 outputAmount;
@@ -152,7 +152,7 @@ abstract contract RouterMultiPool is
             uint256[] memory nftIds = new uint256[](1);
             // Set it to be an ID we own
             nftIds[0] = i + 6;
-            swapList[i] = LSSVMRouter.PairSwapSpecific({
+            swapList[i] = BeaconAmmV1Router.PairSwapSpecific({
                 pair: pairs[i + 1],
                 nftIds: nftIds
             });
